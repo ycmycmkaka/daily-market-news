@@ -31,10 +31,11 @@ prompt = f"""
 </div>
 """
 
-# 確保網址開頭絕對乾淨，無多餘符號
-url = f"[https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=](https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=){api_key}"
+# 【防出錯設計】將網址拆開兩截，防止 Copy 嗰陣被系統當做連結亂加括號 [ ]
+domain = "https://" + "generativelanguage.googleapis.com"
+endpoint = "/v1beta/models/gemini-2.0-flash:generateContent?key="
+url = domain + endpoint + api_key
 
-# 使用正確嘅 googleSearch 聯網搜尋格式
 payload = {
     "contents": [{"parts": [{"text": prompt}]}],
     "tools": [{"googleSearch": {}}]
