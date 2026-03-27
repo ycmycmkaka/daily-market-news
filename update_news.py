@@ -1,13 +1,14 @@
-import google.generativeai as genai
 import os
 import datetime
+import json
+import urllib.request
+import sys
 
 # 攞 GitHub Secrets 入面嘅 API Key
 api_key = os.environ.get("GEMINI_API_KEY")
-genai.configure(api_key=api_key)
-
-# 修正：使用正確嘅 'google_search_retrieval' 字串嚟開啟聯網功能
-model = genai.GenerativeModel('gemini-1.5-flash', tools='google_search_retrieval')
+if not api_key:
+    print("❌ 錯誤：搵唔到 API Key！請檢查 GitHub Secrets。")
+    sys.exit(1)
 
 # 獲取今日日期
 today_str = datetime.datetime.now().strftime("%Y年%m月%d日")
@@ -30,26 +31,54 @@ prompt = f"""
 </div>
 """
 
+# 使用最新嘅 Gemini 2.0 Flash API (內置免費搜尋功能)
+url = f"[https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=](https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=){api_key}"
+
+payload = {
+    "contents": [{"parts": [{"text": prompt}]}],
+    "tools": [{"google_search": {}}]
+}
+
+headers = {'Content-Type': 'application/json'}
+data = json.dumps(payload).encode('utf-8')
+req = urllib.request.Request(url, data=data, headers=headers)
+
+print("正在請求 Gemini 2.0 生成新聞...")
 try:
-    print("正在請求 Gemini 生成新聞...")
-    response = model.generate_content(prompt)
-    new_content = response.text.replace('```html', '').replace('```', '').strip()
-    
-    # 讀取現有嘅 index.html
+    with urllib.request.urlopen(req) as response:
+        result = json.loads(response.read().decode('utf-8'))
+except urllib.error.HTTPError as e:
+    print(f"❌ API 請求失敗 (HTTP {e.code}):")
+    print(e.read().decode('utf-8'))
+    sys.exit(1)  # 直接中止程式，令 GitHub Action 顯示紅燈 ❌
+except Exception as e:
+    print(f"❌ 發生未知網絡錯誤: {e}")
+    sys.exit(1)
+
+# 嘗試抽取生成嘅文字
+try:
+    new_content = result['candidates'][0]['content']['parts'][0]['text']
+    new_content = new_content.replace('```html', '').replace('```', '').strip()
+except KeyError:
+    print("❌ 解析 API 回應時發生錯誤，可能內容被安全機制攔截：")
+    print(json.dumps(result, ensure_ascii=False, indent=2))
+    sys.exit(1)
+
+# 讀取並更新 HTML 檔案
+try:
     with open('index.html', 'r', encoding='utf-8') as f:
         html_content = f.read()
-    
-    # 搵到標記位，將新新聞插入去標記嘅正下方
-    marker = ""
-    if marker in html_content:
-        updated_html = html_content.replace(marker, f"{marker}\n{new_content}")
-        
-        # 覆寫儲存 index.html
-        with open('index.html', 'w', encoding='utf-8') as f:
-            f.write(updated_html)
-        print(f"✅ 成功更新 {today_str} 嘅新聞！")
-    else:
-        print("❌ 錯誤：搵唔到 標記！")
+except FileNotFoundError:
+    print("❌ 錯誤：搵唔到 index.html 檔案！")
+    sys.exit(1)
 
-except Exception as e:
-    print(f"❌ 發生錯誤: {e}")
+marker = ""
+if marker in html_content:
+    updated_html = html_content.replace(marker, f"{marker}\n{new_content}")
+    
+    with open('index.html', 'w', encoding='utf-8') as f:
+        f.write(updated_html)
+    print(f"✅ 成功更新 {today_str} 嘅新聞！")
+else:
+    print("❌ 錯誤：喺 index.html 搵唔到 標記！")
+    sys.exit(1)
