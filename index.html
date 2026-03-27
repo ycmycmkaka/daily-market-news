@@ -12,11 +12,32 @@
         ul { line-height: 1.6; }
         li { margin-bottom: 15px; }
         strong { color: #2980b9; }
+        #loading { text-align: center; color: #7f8c8d; }
     </style>
 </head>
 <body>
 
     <h1>🌍 每日環球財經及政治新聞總結</h1>
+    
+    <div id="news-container">
+        <p id="loading">正在加載最新新聞...</p>
+    </div>
 
-    </body>
+    <script>
+        // 用 JavaScript 自動讀取 news_data.html 嘅內容
+        fetch('news_data.html')
+            .then(response => response.text())
+            .then(data => {
+                if(data.trim() !== "") {
+                    document.getElementById('news-container').innerHTML = data;
+                } else {
+                    document.getElementById('news-container').innerHTML = "<p style='text-align:center;'>暫時未有新聞紀錄。</p>";
+                }
+            })
+            .catch(error => {
+                document.getElementById('news-container').innerHTML = "<p style='text-align:center;color:red;'>無法加載新聞，請稍後再試。</p>";
+            });
+    </script>
+
+</body>
 </html>
