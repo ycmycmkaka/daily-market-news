@@ -6,8 +6,8 @@ import datetime
 api_key = os.environ.get("GEMINI_API_KEY")
 genai.configure(api_key=api_key)
 
-# 使用 Gemini 模型，並開啟 Google Search 聯網功能以獲取最新資訊
-model = genai.GenerativeModel('gemini-1.5-flash', tools=[{'google_search': {}}])
+# 修正：使用正確嘅 'google_search_retrieval' 字串嚟開啟聯網功能
+model = genai.GenerativeModel('gemini-1.5-flash', tools='google_search_retrieval')
 
 # 獲取今日日期
 today_str = datetime.datetime.now().strftime("%Y年%m月%d日")
