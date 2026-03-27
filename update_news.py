@@ -33,7 +33,7 @@ prompt = f"""
 
 # 【防出錯設計】將網址拆開兩截，防止 Copy 嗰陣被系統當做連結亂加括號 [ ]
 domain = "https://" + "generativelanguage.googleapis.com"
-endpoint = "/v1beta/models/gemini-2.0-flash:generateContent?key="
+endpoint = "/v1beta/models/gemini-2.5-flash:generateContent?key="
 url = domain + endpoint + api_key
 
 payload = {
