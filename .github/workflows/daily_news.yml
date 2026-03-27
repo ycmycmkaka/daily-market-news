@@ -1,0 +1,28 @@
+name: Daily News Update
+on:
+  schedule:
+    - cron: '0 0 * * *' # 每日 UTC 0:00 (香港時間 8:00 AM) 自動執行
+  workflow_dispatch: # 亦可以手動掣執行
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      - name: Install dependencies
+        run: pip install google-generativeai
+      - name: Run script
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: python update_news.py
+      - name: Commit and Push
+        run: |
+          git config --global user.name "NewsBot"
+          git config --global user.email "bot@github.com"
+          git add .
+          git commit -m "Update news for $(date)"
+          git push
