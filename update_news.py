@@ -31,12 +31,13 @@ prompt = f"""
 </div>
 """
 
-# 使用最新嘅 Gemini 2.0 Flash API (內置免費搜尋功能)
+# 確保網址開頭絕對乾淨，無多餘符號
 url = f"[https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=](https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=){api_key}"
 
+# 使用正確嘅 googleSearch 聯網搜尋格式
 payload = {
     "contents": [{"parts": [{"text": prompt}]}],
-    "tools": [{"google_search": {}}]
+    "tools": [{"googleSearch": {}}]
 }
 
 headers = {'Content-Type': 'application/json'}
@@ -50,7 +51,7 @@ try:
 except urllib.error.HTTPError as e:
     print(f"❌ API 請求失敗 (HTTP {e.code}):")
     print(e.read().decode('utf-8'))
-    sys.exit(1)  # 直接中止程式，令 GitHub Action 顯示紅燈 ❌
+    sys.exit(1)
 except Exception as e:
     print(f"❌ 發生未知網絡錯誤: {e}")
     sys.exit(1)
